@@ -25,15 +25,17 @@ from tkinter import messagebox
 from tkinter import simpledialog
 from tkinter import ttk
 
-# Define the ACCOUNTS_KV file path and encryption key
+# Define some global vars
+APP_VERSION = "0.0.1"
+
 ENCRYPT_ACCOUNT_FILE = "encrypted_accounts.json"
 RAW_DECRYPTED_ACCOUNT_FILE = "raw_decrypted_accounts.json"
-ENCRYPTION_KEY_PASSWORD = b'It will be generated with generate_encrypt_key(your_password)'
+ENCRYPTION_KEY_PASSWORD = b'It will be generated with generate_encrypt_key(your_password + "mindful)'
 ACCOUNTS_KV = {}
 
 # Create the main application window
 root = tk.Tk()
-root.title("Authenticator OPT")
+root.title(f"Authenticator OPT - Version {APP_VERSION}")
 
 
 # Define the function to save the ACCOUNTS_KV to encrypted file
@@ -397,7 +399,7 @@ def generate_codes():
     refresh_button_end.pack()
 
     instruction_label_end = tk.Label(
-        code_frame, text=f"There are {len(ACCOUNTS_KV)} accounts. It will auto refresh after 10s")
+        code_frame, text=f"You are running version {APP_VERSION}. Source code: https://github.com/vpnry/2fa")
     instruction_label_end.pack(pady=10, padx=10)
 
     # Schedule a new call to the function and save the ID
