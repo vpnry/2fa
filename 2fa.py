@@ -50,8 +50,8 @@ def save_accounts(account_kv):
 def copy_text(text):
     root.clipboard_clear()
     root.clipboard_append(text)
-    messagebox.showinfo(
-        "Copy OK", f"Copied:\n{root.clipboard_get()}")
+    # messagebox.showinfo(
+        # "Copy OK", f"Copied:\n{root.clipboard_get()}")
 
 
 def gen_encrypt_key(password):
