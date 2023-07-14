@@ -1,13 +1,16 @@
 """OTP Python app
-
-Generated via generative AI: ChatGPT, Poe Claude+
+https://github.com/vpnry/2fa
 
 Caution:
 ========
 This script is intended solely for my personal testing environment.
 It may not be sufficiently stable or secure for use in a serious production environment.
-
 Use at your own risk.
+
+Attributions:
+=============
+Many code snippets are generated with generative AI: ChatGPT, Poe Claude+
+
 """
 
 import base64
@@ -30,7 +33,9 @@ APP_VERSION = "0.0.1"
 
 ENCRYPT_ACCOUNT_FILE = "encrypted_accounts.json"
 RAW_DECRYPTED_ACCOUNT_FILE = "raw_decrypted_accounts.json"
-ENCRYPTION_KEY_PASSWORD = b'It will be generated with generate_encrypt_key(your_password + "mindful)'
+ENCRYPTION_KEY_PASSWORD = (
+    b'It will be generated with generate_encrypt_key(your_password + "mindful)'
+)
 ACCOUNTS_KV = {}
 
 # Create the main application window
@@ -51,16 +56,17 @@ def copy_text(text):
     root.clipboard_clear()
     root.clipboard_append(text)
     # messagebox.showinfo(
-        # "Copy OK", f"Copied:\n{root.clipboard_get()}")
+    # "Copy OK", f"Copied:\n{root.clipboard_get()}")
 
 
 def gen_encrypt_key(password):
-    salt = b'saltvaluehere'
+    salt = b"saltvaluehere"
     kdf_iterations = 100_000
     key_length = 32
     # Generate a key using PBKDF2
     key = hashlib.pbkdf2_hmac(
-        'sha256', password.encode(), salt, kdf_iterations, key_length)
+        "sha256", password.encode(), salt, kdf_iterations, key_length
+    )
 
     # Encode the key using base64
     encoded_key = base64.urlsafe_b64encode(key)
@@ -72,50 +78,61 @@ def load_account_kv():
 
     if not os.path.exists(ENCRYPT_ACCOUNT_FILE):
         while True:
-            password = tk.simpledialog.askstring("SETUP NEW PASSWORD",
-                                                 "If you forget this password.\nYou will lose your accounts FOREVER!\nEnter a new password:",
-                                                 show='*')
+            password = tk.simpledialog.askstring(
+                "SETUP NEW PASSWORD",
+                "If you forget this password.\nYou will lose your accounts FOREVER!\nEnter a new password:",
+                show="*",
+            )
             password_confirm = tk.simpledialog.askstring(
-                "Confirm New Password", "Confirm new password:", show='*')
+                "Confirm New Password", "Confirm new password:", show="*"
+            )
             if password == password_confirm:
-                ENCRYPTION_KEY_PASSWORD = gen_encrypt_key(
-                    password + "mindful")
+                ENCRYPTION_KEY_PASSWORD = gen_encrypt_key(password + "mindful")
 
                 ACCOUNTS_KV = {}
-                with open(ENCRYPT_ACCOUNT_FILE, 'w') as config_file:
-                    config_file.write(Fernet(ENCRYPTION_KEY_PASSWORD).encrypt(
-                        json.dumps(ACCOUNTS_KV).encode()).decode())
-                messagebox.showinfo("No accounts found",
-                                    f"Please add accounts manually or Import accounts")
+                with open(ENCRYPT_ACCOUNT_FILE, "w") as config_file:
+                    config_file.write(
+                        Fernet(ENCRYPTION_KEY_PASSWORD)
+                        .encrypt(json.dumps(ACCOUNTS_KV).encode())
+                        .decode()
+                    )
+                messagebox.showinfo(
+                    "No accounts found",
+                    f"Please add accounts manually or Import accounts",
+                )
                 return ACCOUNTS_KV
             else:
                 messagebox.showerror(
-                    "Password Mismatch", "Passwords do not match. Please try again.")
+                    "Password Mismatch", "Passwords do not match. Please try again."
+                )
     else:
         while True:
-            password = tk.simpledialog.askstring("Enter password",
-                                                 "Please enter password",
-                                                 show='*')
+            password = tk.simpledialog.askstring(
+                "Enter password", "Please enter password", show="*"
+            )
             if password is None:
                 raise SystemExit("User cancelled password prompt.")
 
-            ENCRYPTION_KEY_PASSWORD = gen_encrypt_key(
-                password + "mindful")
+            ENCRYPTION_KEY_PASSWORD = gen_encrypt_key(password + "mindful")
 
-            with open(ENCRYPT_ACCOUNT_FILE, 'r') as config_file:
+            with open(ENCRYPT_ACCOUNT_FILE, "r") as config_file:
                 encoded_config = config_file.read().encode()
                 try:
-                    decoded_config = Fernet(ENCRYPTION_KEY_PASSWORD).decrypt(
-                        encoded_config).decode()
+                    decoded_config = (
+                        Fernet(ENCRYPTION_KEY_PASSWORD).decrypt(encoded_config).decode()
+                    )
                     decoded_account_dict = json.loads(decoded_config)
                     account_keys = sorted(decoded_account_dict.keys())
 
-                    ACCOUNTS_KV = {key: decoded_account_dict[key] for key in sorted(account_keys)}
+                    ACCOUNTS_KV = {
+                        key: decoded_account_dict[key] for key in sorted(account_keys)
+                    }
                     return ACCOUNTS_KV
 
                 except InvalidToken:
                     messagebox.showerror(
-                        "Password Mismatch", "Passwords do not match. Please try again.")
+                        "Password Mismatch", "Passwords do not match. Please try again."
+                    )
 
 
 def restart_app():
@@ -126,8 +143,7 @@ def restart_app():
 def import_key():
     global ACCOUNTS_KV
     # Ask the user to select a raw ACCOUNTS_KV file
-    file_path = tk.filedialog.askopenfilename(
-        title="Select a raw ACCOUNTS_KV file")
+    file_path = tk.filedialog.askopenfilename(title="Select a raw ACCOUNTS_KV file")
     if not file_path:
         return
 
@@ -139,8 +155,10 @@ def import_key():
         raw_secrets[label] = secret_key
 
     save_accounts(raw_secrets)
-    messagebox.showinfo("The app will restart now",
-                        f"It will try to restart the app. If failed please exit the app and restart it.")
+    messagebox.showinfo(
+        "The app will restart now",
+        f"It will try to restart the app. If failed please exit the app and restart it.",
+    )
     restart_app()
 
 
@@ -149,8 +167,10 @@ def export_key():
     # Save the ACCOUNTS_KV dictionary to file in JSON format
     with open(RAW_DECRYPTED_ACCOUNT_FILE, "w") as file:
         json.dump(ACCOUNTS_KV, file, indent=4)
-        messagebox.showinfo("Export Success",
-                            f"{RAW_DECRYPTED_ACCOUNT_FILE} is not encrypted. Delete it immediately after use!")
+        messagebox.showinfo(
+            "Export Success",
+            f"{RAW_DECRYPTED_ACCOUNT_FILE} is not encrypted. Delete it immediately after use!",
+        )
 
 
 # Define the function to generate a new key and add it to the ACCOUNTS_KV
@@ -158,42 +178,40 @@ def add_account():
     global ACCOUNTS_KV
     # Ask the user for the account name and secret
     while True:
-        key_name = tk.simpledialog.askstring(
-            "Account name", "Enter account name:")
+        key_name = tk.simpledialog.askstring("Account name", "Enter account name:")
         if not key_name:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Account name error",
-                                 "The account name is empty.")
+            messagebox.showerror("Account name error", "The account name is empty.")
             return
 
         # Check if the account name already exists in the ACCOUNTS_KV
         if key_name in ACCOUNTS_KV:
             messagebox.showerror(
-                "Account name", f"The account name '{key_name}' already exists.")
+                "Account name", f"The account name '{key_name}' already exists."
+            )
         else:
             # The account name is valid
             break
 
     while True:
-        key_secret = tk.simpledialog.askstring(
-            "Key secret", "Enter the key secret:")
+        key_secret = tk.simpledialog.askstring("Key secret", "Enter the key secret:")
         if not key_secret:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Key secret error",
-                                 "They key secret is empty.")
+            messagebox.showerror("Key secret error", "They key secret is empty.")
             return
 
         # Check if the key secret is a valid Base32 string
         try:
             # Encode the key as a bytes object
-            key_bytes = key_secret.encode('utf-8')
+            key_bytes = key_secret.encode("utf-8")
 
             # Decode the key from base32 to bytes
             decoded_key_bytes = base64.b32decode(key_bytes)
             del decoded_key_bytes
         except Exception:
             messagebox.showerror(
-                "Key secret", "Invalid key secret. Please enter a valid Base32 string.")
+                "Key secret", "Invalid key secret. Please enter a valid Base32 string."
+            )
         else:
             # The key secret is valid
             break
@@ -203,8 +221,7 @@ def add_account():
     save_accounts(ACCOUNTS_KV)
 
     # Show a message box to confirm the key has been added
-    messagebox.showinfo(
-        "New Key", f"The key '{key_name}' has been added successfully.")
+    messagebox.showinfo("New Key", f"The key '{key_name}' has been added successfully.")
     generate_codes()
 
 
@@ -214,17 +231,18 @@ def remove_account():
     # Ask the user for the account name to remove
     while True:
         key_name = tk.simpledialog.askstring(
-            "Account name", "Enter account name to remove:")
+            "Account name", "Enter account name to remove:"
+        )
         if not key_name:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Account name error",
-                                 "The account name is empty.")
+            messagebox.showerror("Account name error", "The account name is empty.")
             return
 
         # Check if the account name exists in the ACCOUNTS_KV
         if key_name not in ACCOUNTS_KV:
             messagebox.showerror(
-                "Account name", f"The account name '{key_name}' does not exist.")
+                "Account name", f"The account name '{key_name}' does not exist."
+            )
         else:
             # The account name is valid
             break
@@ -235,7 +253,8 @@ def remove_account():
 
     # Show a message box to confirm the key has been removed
     messagebox.showinfo(
-        "Remove Key", f"The key '{key_name}' has been removed successfully.")
+        "Remove Key", f"The key '{key_name}' has been removed successfully."
+    )
     generate_codes()
 
 
@@ -245,17 +264,18 @@ def rename_account():
     # Ask the user for the account name to rename
     while True:
         old_key_name = tk.simpledialog.askstring(
-            "Account name", "Enter account name to rename:")
+            "Account name", "Enter account name to rename:"
+        )
         if not old_key_name:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Account name error",
-                                 "The account name is empty.")
+            messagebox.showerror("Account name error", "The account name is empty.")
             return
 
         # Check if the account name exists in the ACCOUNTS_KV
         if old_key_name not in ACCOUNTS_KV:
             messagebox.showerror(
-                "Account name", f"The account name '{old_key_name}' does not exist.")
+                "Account name", f"The account name '{old_key_name}' does not exist."
+            )
         else:
             # The account name is valid
             break
@@ -263,17 +283,18 @@ def rename_account():
     # Ask the user for the new account name
     while True:
         new_key_name = tk.simpledialog.askstring(
-            "New account name", "Enter the new account name:")
+            "New account name", "Enter the new account name:"
+        )
         if not new_key_name:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Account name error",
-                                 "The account name is empty.")
+            messagebox.showerror("Account name error", "The account name is empty.")
             return
 
         # Check if the new account name already exists in the ACCOUNTS_KV
         if new_key_name in ACCOUNTS_KV:
             messagebox.showerror(
-                "New account name", f"The account name '{new_key_name}' already exists.")
+                "New account name", f"The account name '{new_key_name}' already exists."
+            )
         else:
             # The new account name is valid
             break
@@ -284,7 +305,9 @@ def rename_account():
 
     # Show a message box to confirm the key has been renamed
     messagebox.showinfo(
-        "Rename Key", f"The key '{old_key_name}' has been renamed to '{new_key_name}' successfully.")
+        "Rename Key",
+        f"The key '{old_key_name}' has been renamed to '{new_key_name}' successfully.",
+    )
     generate_codes()
 
 
@@ -293,17 +316,18 @@ def update_account():
     # Ask the user for the account name to edit
     while True:
         key_name = tk.simpledialog.askstring(
-            "Account name", "Enter account name to edit:")
+            "Account name", "Enter account name to edit:"
+        )
         if not key_name:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("Account name error",
-                                 "The account name is empty.")
+            messagebox.showerror("Account name error", "The account name is empty.")
             return
 
         # Check if the account name exists in the ACCOUNTS_KV
         if key_name not in ACCOUNTS_KV:
             messagebox.showerror(
-                "Account name", f"The account name '{key_name}' does not exist.")
+                "Account name", f"The account name '{key_name}' does not exist."
+            )
         else:
             # The account name is valid
             break
@@ -311,24 +335,26 @@ def update_account():
     # Ask the user for the new key secret
     while True:
         new_key_secret = tk.simpledialog.askstring(
-            "New key secret", "Enter the new key secret:")
+            "New key secret", "Enter the new key secret:"
+        )
         if not new_key_secret:
             # The user clicked Cancel or entered an empty string
-            messagebox.showerror("New key secret error",
-                                 "The new key secret is empty.")
+            messagebox.showerror("New key secret error", "The new key secret is empty.")
             return
 
         # Check if the new key secret is a valid Base32 string
         try:
             # Encode the key as a bytes object
-            key_bytes = new_key_secret.encode('utf-8')
+            key_bytes = new_key_secret.encode("utf-8")
 
             # Decode the key from base32 to bytes
             decoded_key_bytes = base64.b32decode(key_bytes)
             del decoded_key_bytes
         except Exception:
             messagebox.showerror(
-                "New key secret", "Invalid new key secret. Please enter a valid Base32 string.")
+                "New key secret",
+                "Invalid new key secret. Please enter a valid Base32 string.",
+            )
         else:
             # The new key secret is valid
             break
@@ -339,11 +365,13 @@ def update_account():
 
     # Show a message box to confirm the key has been updated
     messagebox.showinfo(
-        "Edit Key", f"The key '{key_name}' has been updated successfully.")
+        "Edit Key", f"The key '{key_name}' has been updated successfully."
+    )
     generate_codes()
 
 
 # Define the function to generate the codes for all keys
+
 
 def generate_codes():
     # Clear the codes frame
@@ -358,11 +386,14 @@ def generate_codes():
 
     # Loop through all the ACCOUNTS_KV and generate the codes
     refresh_button = tk.Button(
-        code_frame, text="Refresh code now", command=generate_codes, background="green")
+        code_frame, text="Refresh code now", command=generate_codes, background="green"
+    )
     refresh_button.pack()
 
     instruction_label = tk.Label(
-        code_frame, text=f"There are {len(ACCOUNTS_KV)} accounts. It will auto refresh after 10s")
+        code_frame,
+        text=f"There are {len(ACCOUNTS_KV)} accounts. It will auto refresh after 10s",
+    )
     instruction_label.pack(pady=10, padx=10)
 
     divider = ttk.Separator(code_frame, orient="horizontal")
@@ -374,32 +405,41 @@ def generate_codes():
         seconds_left = totp.interval - int(time.time()) % totp.interval
 
         # Add copy label button
-        copy_key_button = tk.Button(code_frame, text="Copy name",
-                                    command=lambda this_keyname=key_name: copy_text(this_keyname))
+        copy_key_button = tk.Button(
+            code_frame,
+            text="Copy name",
+            command=lambda this_keyname=key_name: copy_text(this_keyname),
+        )
         copy_key_button.pack()
 
-        code_formatted = ' '.join(code[i:i + 3]
-                                  for i in range(0, len(code), 3))
+        code_formatted = " ".join(code[i : i + 3] for i in range(0, len(code), 3))
         label = tk.Label(
-            code_frame, text=f"{key_name}: {code_formatted} (valid in: {seconds_left}s)")
+            code_frame, text=f"{key_name}: {code_formatted} (valid in: {seconds_left}s)"
+        )
 
         label.config(font=("Arial", 18))  # increase font size to 18
         label.pack()
 
         # Add copy code button
-        copy_code_button = tk.Button(code_frame, text="Copy OTP code",
-                                     command=lambda this_code=code: copy_text(this_code))
+        copy_code_button = tk.Button(
+            code_frame,
+            text="Copy OTP code",
+            command=lambda this_code=code: copy_text(this_code),
+        )
         copy_code_button.pack()
 
         divider = ttk.Separator(code_frame, orient="horizontal")
         divider.pack(fill="x", pady=10)
 
     refresh_button_end = tk.Button(
-        code_frame, text="Refresh code now", command=generate_codes, background="green")
+        code_frame, text="Refresh code now", command=generate_codes, background="green"
+    )
     refresh_button_end.pack()
 
     instruction_label_end = tk.Label(
-        code_frame, text=f"You are running version {APP_VERSION}. Source code: https://github.com/vpnry/2fa")
+        code_frame,
+        text=f"You are running version {APP_VERSION}. Source code: https://github.com/vpnry/2fa",
+    )
     instruction_label_end.pack(pady=10, padx=10)
 
     # Schedule a new call to the function and save the ID
@@ -438,12 +478,16 @@ code_canvas = tk.Canvas(main_frame)
 code_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
 # 3. Add a Scrollbar to the canvas
-code_scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=code_canvas.yview)
+code_scrollbar = ttk.Scrollbar(
+    main_frame, orient=tk.VERTICAL, command=code_canvas.yview
+)
 code_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
 # 4. Configure the canvas
 code_canvas.configure(yscrollcommand=code_scrollbar.set)
-code_canvas.bind('<Configure>', lambda e: code_canvas.configure(scrollregion=code_canvas.bbox("all")))
+code_canvas.bind(
+    "<Configure>", lambda e: code_canvas.configure(scrollregion=code_canvas.bbox("all"))
+)
 
 # 5. create another frame inside the canvas
 code_frame = tk.Frame(code_canvas)
@@ -453,22 +497,16 @@ code_canvas.create_window((0, 0), window=code_frame, anchor="nw")
 # Create the menu bar
 menu_bar = tk.Menu(root)
 menu_bar.add_command(label="Exit", command=root.quit, background="red")
-menu_bar.add_command(label="Add account",
-                     command=add_account, state="disabled")
-menu_bar.add_command(label="Rename account",
-                     command=rename_account, state="disabled")
-menu_bar.add_command(label="Update account",
-                     command=update_account, state="disabled")
-menu_bar.add_command(label="Import accounts",
-                     command=import_key, state="disabled")
+menu_bar.add_command(label="Add account", command=add_account, state="disabled")
+menu_bar.add_command(label="Rename account", command=rename_account, state="disabled")
+menu_bar.add_command(label="Update account", command=update_account, state="disabled")
+menu_bar.add_command(label="Import accounts", command=import_key, state="disabled")
 
 dangerous_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="CAREFUL", menu=dangerous_menu, state="disabled")
-dangerous_menu.add_command(label="Export accounts",
-                           command=export_key)
+dangerous_menu.add_command(label="Export accounts", command=export_key)
 dangerous_menu.add_separator()
-dangerous_menu.add_command(label="Remove account",
-                           command=remove_account)
+dangerous_menu.add_command(label="Remove account", command=remove_account)
 
 root.config(menu=menu_bar)
 
